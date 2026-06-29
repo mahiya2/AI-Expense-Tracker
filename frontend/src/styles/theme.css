@@ -1,0 +1,14 @@
+body.dark {
+  background: #0f172a;
+  color: white;
+}
+
+body.dark .card {
+  background: #1e293b;
+  color: white;
+}
+
+body.dark table {
+  background: #1e293b;
+  color: white;
+}
