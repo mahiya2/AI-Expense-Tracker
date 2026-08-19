@@ -6,6 +6,12 @@ const {
   chatWithAI,
 } = require("../controllers/aiController");
 
-router.post("/chat", chatWithAI);
+const authMiddleware = require("../middleware/authMiddleware");
+
+router.post(
+  "/chat",
+  authMiddleware,
+  chatWithAI
+);
 
 module.exports = router;

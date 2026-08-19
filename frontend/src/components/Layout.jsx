@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import {
   FaTachometerAlt,
   FaMoneyBillWave,
@@ -11,25 +11,39 @@ function Layout({ children }) {
     localStorage.clear();
     window.location.href = "/";
   };
-
+  const navLinkStyle = ({ isActive }) => ({
+    textDecoration: "none",
+    color: "#cbd5e1",
+    padding: "12px",
+    borderRadius: "10px",
+    background: isActive
+      ? "#2563eb"
+      : "transparent",
+    display: "flex",
+    alignItems: "center",
+    transition: "0.2s",
+  });
   return (
-    <div
-      style={{
-        display: "flex",
-        minHeight: "100vh",
-   backgroundColor: "#eef2ff",
-      }}
-    >
+<div
+  style={{
+    display: "flex",
+    minHeight: "100vh",
+   background:
+  "linear-gradient(135deg, #eef2ff, #e0f2fe, #f3e8ff)",
+    backgroundSize: "200% 200%",
+    animation: "backgroundMove 12s ease infinite",
+  }}
+>
       {/* Sidebar */}
-      <div
-        style={{
-          width: "260px",
-          background: "#0f172a",
-          color: "white",
-          padding: "25px",
-          boxShadow: "2px 0px 10px rgba(0,0,0,0.1)",
-        }}
-      >
+ <div
+  style={{
+    width: "260px",
+    background: "#020617",
+    color: "#f8fafc",
+    padding: "25px",
+    boxShadow: "2px 0px 10px rgba(0,0,0,0.3)",
+  }}
+>
         <h2
           style={{
             textAlign: "center",
@@ -53,56 +67,48 @@ function Layout({ children }) {
             gap: "15px",
           }}
         >
-       <Link
+    <NavLink
   to="/dashboard"
-  style={{
-    textDecoration: "none",
-    color: "white",
-  }}
+  style={navLinkStyle}
+className="sidebar-link"
 >
   <FaTachometerAlt
     style={{ marginRight: "10px" }}
   />
   Dashboard
-</Link>
+</NavLink>
+<NavLink
+  to="/expenses"
+  style={navLinkStyle}
+className="sidebar-link"
+>
+  <FaMoneyBillWave
+    style={{ marginRight: "10px" }}
+  />
+  Expenses
+</NavLink>
 
-          <Link
-            to="/expenses"
-            style={{
-              textDecoration: "none",
-              color: "white",
-            }}
-          >
-          <FaMoneyBillWave
-  style={{ marginRight: "10px" }}
-/>
-Expenses
-          </Link>
+<NavLink
+  to="/analytics"
+  style={navLinkStyle}
+className="sidebar-link"
+>
 
-          <Link
-            to="/analytics"
-            style={{
-              textDecoration: "none",
-              color: "white",
-            }}
-          >
-            <FaChartPie
-  style={{ marginRight: "10px" }}
-/>
-Analytics
-          </Link>
-
-          <Link
-            to="/ai"
-            style={{
-              textDecoration: "none",
-              color: "white",
-            }}
-          ><FaRobot
-  style={{ marginRight: "10px" }}
-/>
-AI Assistant
-          </Link>
+  <FaChartPie
+    style={{ marginRight: "10px" }}
+  />
+  Analytics
+</NavLink>
+<NavLink
+  to="/ai"
+  style={navLinkStyle}
+className="sidebar-link"
+>
+  <FaRobot
+    style={{ marginRight: "10px" }}
+  />
+  AI Assistant
+</NavLink>
         </div>
 
         <button
@@ -119,7 +125,9 @@ AI Assistant
             fontWeight: "bold",
           }}
         >
+          
         <>
+        
   <FaSignOutAlt
     style={{ marginRight: "8px" }}
   />

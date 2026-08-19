@@ -1,31 +1,44 @@
 import { useState } from "react";
 import API from "../services/api";
 import Layout from "../components/Layout";
+import "../styles/AIAssistant.css";
 function AIAssistant() {
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const [messages, setMessages] = useState([
     {
       sender: "AI",
       text: `👋 Welcome to AI Expense Assistant!
 
-You can ask things like:
+You can ask me anything about your expenses.
+
+For example:
 
 • How much did I spend on Food?
-• Show my recent expenses
 • What is my highest expense?
-• Give me spending insights
-• How much budget is left?`,
+• Why am I spending so much?
+• Compare my Food and Travel expenses.
+• How can I reduce my spending?
+• Give me a summary of my expenses.
+• How much budget do I have left?
+
+You can also say something like:
+"I spent ₹500 on Food"
+and I can add it to your expenses.`,
     },
   ]);
 
   const handleSend = async () => {
-    if (!message) return;
+    const trimmedMessage = message.trim();
+
+    if (!trimmedMessage || loading) return;
 
     try {
+      // Add user message
       const userMessage = {
         sender: "You",
-        text: message,
+        text: trimmedMessage,
       };
 
       setMessages((prev) => [
@@ -33,18 +46,20 @@ You can ask things like:
         userMessage,
       ]);
 
-      const user = JSON.parse(
-  localStorage.getItem("user")
-);
-const budget =
+      // Clear input immediately
+      setMessage("");
+
+      // Show loading state
+      setLoading(true);
+
+     const budget =
   localStorage.getItem("budget") || 0;
 
 const res = await API.post("/ai/chat", {
-  message,
-  userId: user.id,
+  message: trimmedMessage,
   budget,
 });
-
+      // Add AI response
       const aiMessage = {
         sender: "AI",
         text: res.data.reply,
@@ -55,111 +70,174 @@ const res = await API.post("/ai/chat", {
         aiMessage,
       ]);
 
-      setMessage("");
     } catch (error) {
       console.log(error);
-      alert("Failed to connect AI");
+
+      const errorMessage = {
+        sender: "AI",
+        text: "❌ Sorry, I couldn't connect to the AI. Please try again.",
+      };
+
+      setMessages((prev) => [
+        ...prev,
+        errorMessage,
+      ]);
+
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const clearChat = () => {
+    setMessages([
+      {
+        sender: "AI",
+        text: `👋 Chat cleared!
+
+How can I help you with your expenses?`,
+      },
+    ]);
   };
 
   return (
     <Layout>
-      <h1
-  style={{
-    color: "#1e293b",
-    marginBottom: "25px",
-  }}
->
-  AI Expense Assistant
-</h1>
+{/* Header */}
+<div className="ai-header">
 
-    <div
-  style={{
-    background: "#fff",
-    borderRadius: "15px",
-    padding: "20px",
-   height: "350px",
-    overflowY: "auto",
-    boxShadow:
-      "0 4px 12px rgba(0,0,0,0.08)",
-    marginBottom: "20px",
-  }}
->
- {messages.map((msg, index) => (
-  <div
-    key={index}
-    style={{
-      display: "flex",
-      justifyContent:
-        msg.sender === "You"
-          ? "flex-end"
-          : "flex-start",
-      marginBottom: "15px",
-    }}
-  >
-    <div
-      style={{
-        background:
-          msg.sender === "You"
-           ? "#2563eb"
-    : "#f1f5f9",
-        color:
-          msg.sender === "You"
-            ? "white"
-            : "black",
-        padding: "12px",
-        borderRadius: "12px",
-        maxWidth: "60%",
-        whiteSpace: "pre-line",
-      }}
-    >
-      <strong>{msg.sender}</strong>
-      <br />
-      {msg.text}
-    </div>
+  <div className="ai-title-section">
+
+    <span className="ai-label">
+      ✨ AI Powered
+    </span>
+
+    <h1>
+      🤖 AI Expense Assistant
+    </h1>
+
+    <p>
+      Ask questions, understand your spending,
+      and manage expenses with AI.
+    </p>
+
   </div>
-))}
-      </div>
-<div
-  style={{
-    display: "flex",
-    gap: "10px",
-  }}
+
+  <div className="ai-header-actions">
+
+    <div className="ai-status">
+      <span className="ai-status-dot"></span>
+      AI Online
+    </div>
+
+    <button
+      onClick={clearChat}
+      disabled={loading}
+      className="clear-chat-btn"
+    >
+      🧹 Clear Chat
+    </button>
+
+  </div>
+
+</div>
+  {/* Chat Box */}
+<div className="ai-chat-box">
+
+        {messages.map((msg, index) => (
+       <div
+  key={index}
+  className={`ai-message-row ${
+    msg.sender === "You"
+      ? "user-message-row"
+      : "ai-message-row-left"
+  }`}
 >
-<input
+<div
+  className={
+    msg.sender === "You"
+      ? "user-message"
+      : "ai-message"
+  }
+>
+
+            <div
+  className={
+    msg.sender === "You"
+      ? "user-message-label"
+      : "ai-message-label"
+  }
+>
+  {msg.sender === "You"
+    ? "👤 You"
+    : "🤖 AI Assistant"}
+</div>
+
+              <div>
+                {msg.text}
+              </div>
+
+            </div>
+
+          </div>
+        ))}
+
+  {/* AI Thinking Indicator */}
+{loading && (
+  <div className="ai-message-row ai-message-row-left">
+
+    <div className="ai-typing">
+
+      <span>🤖 AI Assistant</span>
+
+      <div className="typing-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+
+    </div>
+
+  </div>
+)}
+
+      </div>
+
+      {/* Input Area */}
+<div className="ai-input-container">
+
+      <input
   type="text"
-  placeholder="Ask about expenses..."
+  placeholder="Ask anything about your expenses..."
   value={message}
   onChange={(e) =>
     setMessage(e.target.value)
   }
   onKeyDown={(e) => {
-    if (e.key === "Enter") {
+    if (
+      e.key === "Enter" &&
+      !loading
+    ) {
       handleSend();
     }
   }}
-  style={{
-    flex: 1,
-    padding: "12px",
-    borderRadius: "8px",
-    border: "1px solid #ccc",
-  }}
+  disabled={loading}
+  className="ai-message-input"
 />
 
-  <button
-    onClick={handleSend}
-    style={{
-      background: "#2563eb",
-      color: "white",
-      border: "none",
-      padding: "12px 20px",
-      borderRadius: "8px",
-      cursor: "pointer",
-    }}
-  >
-    Send
-  </button>
-</div>
+      <button
+  onClick={handleSend}
+  disabled={
+    loading ||
+    !message.trim()
+  }
+  className="ai-send-button"
+>
+  {loading
+    ? "Thinking..."
+    : "➤ Send"}
+</button>
+
+      </div>
+
     </Layout>
   );
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import API from "../services/api";
 import Layout from "../components/Layout";
+import "../styles/Analytics.css";
 import {
   PieChart,
   Pie,
@@ -52,6 +53,7 @@ acc[category].value += Number(
       return acc;
     }, {})
   );
+  
   const monthlyData = Object.values(
   expenses.reduce((acc, expense) => {
     const month = new Date(
@@ -74,7 +76,15 @@ acc[category].value += Number(
     return acc;
   }, {})
 );
+const totalExpenses = expenses.reduce(
+  (sum, expense) =>
+    sum + Number(expense.amount),
+  0
+);
 
+const totalTransactions = expenses.length;
+
+const totalCategories = categoryData.length;
   const COLORS = [
     "#0088FE",
     "#00C49F",
@@ -84,39 +94,67 @@ acc[category].value += Number(
   ];
   return (
 <Layout>
-     <h1
-  style={{
-    color: "#1e293b",
-    marginBottom: "30px",
-  }}
->
-  Expense Analytics
-</h1>
-<div
-  style={{
-    display: "flex",
-    gap: "30px",
-    flexWrap: "wrap",
-    justifyContent: "center",
-  }}
->
+<div className="analytics-header">
+  <div>
+    <span className="analytics-label">
+      📊 Financial Insights
+    </span>
+
+    <h1>Expense Analytics</h1>
+
+    <p>
+      Understand your spending patterns and
+      track your expenses over time.
+    </p>
+  </div>
+</div>
+<div className="analytics-summary-cards">
+
+  {/* Total Spent */}
+  <div className="analytics-summary-card">
+    <div className="summary-card-icon">
+      💰
+    </div>
+
+    <div>
+      <p>Total Spent</p>
+      <h2>₹{totalExpenses}</h2>
+    </div>
+  </div>
+
+  {/* Total Transactions */}
+  <div className="analytics-summary-card">
+    <div className="summary-card-icon">
+      🧾
+    </div>
+
+    <div>
+      <p>Total Transactions</p>
+      <h2>{totalTransactions}</h2>
+    </div>
+  </div>
+{/* Total Categories */}
+<div className="analytics-summary-card">
+  <div className="summary-card-icon">
+    🏷️
+  </div>
+
+  <div>
+    <p>Categories</p>
+    <h2>{totalCategories}</h2>
+  </div>
+</div>
+</div>
+<div className="analytics-chart-section">
   {/* Pie Chart Card */}
-  <div
-    style={{
-      background: "#fff",
-      padding: "20px",
-      borderRadius: "15px",
-      boxShadow:
-        "0 4px 12px rgba(0,0,0,0.08)",
-    }}
-  >
-    <h3
-      style={{
-        textAlign: "center",
-      }}
-    >
-      Category Distribution
-    </h3>
+<div className="analytics-chart-card">
+  <div className="chart-card-header">
+  <h3>Category Distribution</h3>
+
+  <span>
+    Spending by category
+  </span>
+</div>
 
     <PieChart
       width={400}
@@ -151,22 +189,14 @@ acc[category].value += Number(
   </div>
 
   {/* Bar Chart Card */}
-  <div
-    style={{
-      background: "#fff",
-      padding: "20px",
-      borderRadius: "15px",
-      boxShadow:
-        "0 4px 12px rgba(0,0,0,0.08)",
-    }}
-  >
-    <h3
-      style={{
-        textAlign: "center",
-      }}
-    >
-      Category Comparison
-    </h3>
+  <div className="analytics-chart-card">
+   <div className="chart-card-header">
+  <h3>Category Comparison</h3>
+
+  <span>
+    Compare your spending
+  </span>
+</div>
 
     <BarChart
       width={450}
@@ -190,24 +220,14 @@ acc[category].value += Number(
     </BarChart>
   </div>
 </div>
-<div
-  style={{
-    marginTop: "40px",
-    background: "#fff",
-    padding: "20px",
-    borderRadius: "15px",
-    boxShadow:
-      "0 4px 12px rgba(0,0,0,0.08)",
-  }}
->
-  <h3
-    style={{
-      textAlign: "center",
-      marginBottom: "20px",
-    }}
-  >
-    Monthly Expense Trend
-  </h3>
+<div className="analytics-trend-card">
+<div className="chart-card-header">
+  <h3>Monthly Expense Trend</h3>
+
+  <span>
+    Track how your spending changes over time
+  </span>
+</div>
 
 <LineChart
   width={700}

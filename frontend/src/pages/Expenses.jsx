@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import API from "../services/api";
 import Layout from "../components/Layout";
+import "../styles/Expenses.css";
 function Expenses() {
   const [formData, setFormData] = useState({
     amount: "",
@@ -116,196 +117,173 @@ const editExpense = (expense) => {
 };
   return (
     <Layout>
-      <h1>Expense Management</h1>
+    <div className="expense-page-header">
+  <h1>Expense Management</h1>
 
-     <form
+  <p>
+    Add, manage and track your daily expenses.
+  </p>
+</div>
+<form
   onSubmit={handleSubmit}
-  style={{
-    background: "#fff",
-    padding: "25px",
-    borderRadius: "12px",
-    boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-    width: "400px",
-   margin: "0 auto 30px auto",
-  }}
-><h3
-  style={{
-    textAlign: "center",
-    marginBottom: "20px",
-  }}
+  className="expense-form-card"
 >
-  Add Expense
-</h3>
+  <h3 className="expense-form-title">
+    {editId
+      ? "✏️ Update Expense"
+      : "➕ Add New Expense"}
+  </h3>
 
-        <input
-  type="number"
-  name="amount"
-  placeholder="Amount"
-  value={formData.amount}
-  onChange={handleChange}
-  style={{
-    width: "300px",
-    padding: "12px",
-    borderRadius: "8px",
-    border: "1px solid #ccc",
-  }}
-/>
-        <br /><br />
+  <div className="expense-form-grid">
 
-        <input
-  type="text"
-  name="category"
-  placeholder="Category"
-  value={formData.category}
-  onChange={handleChange}
-  style={{
-    width: "300px",
-    padding: "12px",
-    borderRadius: "8px",
-    border: "1px solid #ccc",
-  }}
-/>
-        <br /><br />
+    {/* Amount */}
+    <div className="expense-field">
+      <label>Amount</label>
 
-       <input
-  type="text"
-  name="merchant"
-  placeholder="Merchant"
-  value={formData.merchant}
-  onChange={handleChange}
-  style={{
-    width: "300px",
-    padding: "12px",
-    borderRadius: "8px",
-    border: "1px solid #ccc",
-  }}
-/>
+      <input
+        type="number"
+        name="amount"
+        placeholder="Enter amount"
+        value={formData.amount}
+        onChange={handleChange}
+        className="expense-input"
+      />
+    </div>
 
-        <br /><br />
-<input
-  type="text"
-  name="description"
-  placeholder="Description"
-  value={formData.description}
-  onChange={handleChange}
-  style={{
-    width: "300px",
-    padding: "12px",
-    borderRadius: "8px",
-    border: "1px solid #ccc",
-  }}
-/>
-        <br /><br />
+    {/* Category */}
+    <div className="expense-field">
+      <label>Category</label>
 
-       <select
-  name="paymentMethod"
-  value={formData.paymentMethod}
-  onChange={handleChange}
-  style={{
-    display: "block",
-    margin: "0 auto",
-    padding: "8px",
-  }}
->
-          <option>Cash</option>
-          <option>UPI</option>
-          <option>Card</option>
-        </select>
+      <input
+        type="text"
+        name="category"
+        placeholder="e.g. Food"
+        value={formData.category}
+        onChange={handleChange}
+        className="expense-input"
+      />
+    </div>
 
-        <br /><br />
+    {/* Merchant */}
+    <div className="expense-field">
+      <label>Merchant</label>
 
-<div
-  style={{
-    display: "flex",
-    justifyContent: "center",
-  }}
->
-  <button
-    type="submit"
-    style={{
-      background: "#2563eb",
-      color: "white",
-      border: "none",
-      padding: "12px 20px",
-      borderRadius: "8px",
-      cursor: "pointer",
-    }}
+      <input
+        type="text"
+        name="merchant"
+        placeholder="e.g. Restaurant"
+        value={formData.merchant}
+        onChange={handleChange}
+        className="expense-input"
+      />
+    </div>
+
+    {/* Payment Method */}
+    <div className="expense-field">
+      <label>Payment Method</label>
+
+      <select
+        name="paymentMethod"
+        value={formData.paymentMethod}
+        onChange={handleChange}
+        className="expense-select"
+      >
+        <option>Cash</option>
+        <option>UPI</option>
+        <option>Card</option>
+      </select>
+    </div>
+
+    {/* Description */}
+    <div className="expense-field full-width">
+      <label>Description</label>
+
+      <input
+        type="text"
+        name="description"
+        placeholder="Add a short description"
+        value={formData.description}
+        onChange={handleChange}
+        className="expense-input"
+      />
+    </div>
+
+  </div>
+
+  <div className="expense-submit-container">
+
+    <button
+      type="submit"
+      className="expense-submit-btn"
+    >
+      {editId
+        ? "Update Expense"
+        : "Add Expense"}
+    </button>
+
+  </div>
+
+</form>
+<div className="expense-filter-bar">
+
+  <div className="search-wrapper">
+    <span className="search-icon">🔍</span>
+
+    <input
+      type="text"
+      placeholder="Search by category..."
+      value={search}
+      onChange={(e) =>
+        setSearch(e.target.value)
+      }
+      className="expense-search-input"
+    />
+  </div>
+
+  <select
+    value={filterCategory}
+    onChange={(e) =>
+      setFilterCategory(e.target.value)
+    }
+    className="expense-filter-select"
   >
-    {editId ? "Update Expense" : "Add Expense"}
-  </button>
+    <option value="">
+      All Categories
+    </option>
+
+    <option value="Food">
+      Food
+    </option>
+
+    <option value="Travel">
+      Travel
+    </option>
+
+    <option value="Shopping">
+      Shopping
+    </option>
+
+    <option value="Loan">
+      Loan
+    </option>
+  </select>
+
 </div>
-      </form><div
-  style={{
-    display: "flex",
-    justifyContent: "center",
-    gap: "10px",
-    marginBottom: "20px",
-  }}
->
-       <input
-  type="text"
-  placeholder="Search by category..."
-  value={search}
-  onChange={(e) => setSearch(e.target.value)}
-  style={{
-    width: "350px",
-    padding: "12px",
-    borderRadius: "8px",
-    border: "1px solid #ccc",
-  }}
-/>
-<select
-  value={filterCategory}
-  onChange={(e) =>
-    setFilterCategory(e.target.value)
-  }
-  style={{
-    padding: "10px",
-    marginLeft: "10px",
-  }}
->
-  <option value="">
-    All Categories
-  </option>
+ <div className="expense-list-header">
+  <div>
+    <h2>Expense List</h2>
+    <p>
+      View and manage your recorded expenses.
+    </p>
+  </div>
 
-  <option value="Food">
-    Food
-  </option>
-
-  <option value="Travel">
-    Travel
-  </option>
-
-  <option value="Shopping">
-    Shopping
-  </option>
-
-  <option value="Loan">
-    Loan
-  </option>
-</select>
+  <span className="expense-count">
+    {expenses.length} Expenses
+  </span>
 </div>
-     <h2
-  style={{
-    textAlign: "center",
-    marginTop: "20px",
-    marginBottom: "20px",
-    color: "#1e293b",
-  }}
->
+<div className="expense-table-container">
 
-  Expense List
-</h2>
-
-      <table
-  style={{
-    width: "90%",
-margin: "0 auto",
-    borderCollapse: "collapse",
-    marginTop: "20px",
-    background: "white",
-  }}
->
+  <table className="expense-table">
        <thead
   style={{
     background: "#e2e8f0",
@@ -334,78 +312,116 @@ margin: "0 auto",
           </tr>
         </thead>
 
-        <tbody>
-          {expenses
-  .filter((expense) =>
-    expense.category
-      .toLowerCase()
-      .includes(search.toLowerCase())
-  )
-  .filter(
-  (expense) =>
-    filterCategory === "" ||
-    expense.category.toLowerCase() ===
-      filterCategory.toLowerCase()
-)
-  .map((expense) => (
-            <tr key={expense._id}>
- <td style={{ padding: "12px", textAlign: "center" }}>
-  ₹{expense.amount}
-</td>
+ <tbody>
+  {(() => {
+    const filteredExpenses = expenses
+      .filter((expense) =>
+        expense.category
+          .toLowerCase()
+          .includes(search.toLowerCase())
+      )
+      .filter(
+        (expense) =>
+          filterCategory === "" ||
+          expense.category.toLowerCase() ===
+            filterCategory.toLowerCase()
+      );
 
-<td style={{ padding: "12px", textAlign: "center" }}>
-  {expense.category}
-</td>
+    if (filteredExpenses.length === 0) {
+      return (
+        <tr>
+          <td
+            colSpan="5"
+            className="no-expenses-found"
+          >
+            <div className="empty-expense-state">
+              <div className="empty-expense-icon">
+                🔍
+              </div>
 
-<td style={{ padding: "12px", textAlign: "center" }}>
-  {expense.description}
-</td>
+              <h3>No expenses found</h3>
 
-<td style={{ padding: "12px", textAlign: "center" }}>
-  {expense.paymentMethod}
-</td>
+              <p>
+                Try changing your search or
+                category filter.
+              </p>
+            </div>
+          </td>
+        </tr>
+      );
+    }
 
-<td
-  style={{
-    padding: "12px",
-    textAlign: "center",
-  }}
->
-  {/* Edit Button */}
+    return filteredExpenses.map(
+      (expense) => (
+        <tr key={expense._id}>
 
-  <button
-    onClick={() => editExpense(expense)}
-    style={{
-      background: "#f59e0b",
-      color: "white",
-      border: "none",
-      padding: "8px 12px",
-      borderRadius: "6px",
-      cursor: "pointer",
-    }}
-  >
-    Edit
-  </button>
+          <td className="expense-amount-cell">
+            ₹{expense.amount}
+          </td>
 
-  <button
-    onClick={() => deleteExpense(expense._id)}
-    style={{
-      background: "#ef4444",
-      color: "white",
-      border: "none",
-      padding: "8px 12px",
-      borderRadius: "6px",
-      cursor: "pointer",
-      marginLeft: "5px",
-    }}
-  >
-    Delete
-  </button>
-</td>
-</tr>
-          ))}
-        </tbody>
+          <td className="expense-category-cell">
+            <span className="expense-category-badge">
+              🏷️ {expense.category}
+            </span>
+          </td>
+
+          <td
+            style={{
+              padding: "12px",
+              textAlign: "center",
+            }}
+          >
+            {expense.description}
+          </td>
+
+          <td className="expense-payment-cell">
+            <span className="expense-payment-badge">
+              {expense.paymentMethod === "UPI"
+                ? "📱"
+                : expense.paymentMethod ===
+                  "Card"
+                ? "💳"
+                : "💵"}
+
+              {" "}
+
+              {expense.paymentMethod}
+            </span>
+          </td>
+
+          <td className="expense-actions-cell">
+
+            <div className="expense-action-buttons">
+
+              <button
+                onClick={() =>
+                  editExpense(expense)
+                }
+                className="edit-expense-btn"
+              >
+                ✏️ Edit
+              </button>
+
+              <button
+                onClick={() =>
+                  deleteExpense(expense._id)
+                }
+                className="delete-expense-btn"
+              >
+                🗑️ Delete
+              </button>
+
+            </div>
+
+          </td>
+
+        </tr>
+      )
+    );
+  })()}
+</tbody>
       </table>
+      </div>
        </Layout>
   ); 
 } 

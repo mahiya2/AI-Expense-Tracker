@@ -7,341 +7,344 @@ const groq = new Groq({
 
 const chatWithAI = async (req, res) => {
   try {
-const {
-  message,
-  userId,
-  budget,
-} = req.body;
+   const { message, budget } = req.body;
 
-    const lowerMessage = message.toLowerCase();
+const userId = req.user.id;
 
-    // Food Expenses Query
-  // Dynamic Category Query
-if (lowerMessage.includes("how much")) {
-  const expenses = await Expense.find({ userId });
-
-  const categories = [
-    ...new Set(
-      expenses.map((expense) =>
-        expense.category.toLowerCase()
-      )
-    ),
-  ];
-
-  const matchedCategory = categories.find(
-    (category) =>
-      lowerMessage.includes(category)
-  );
-
-  if (matchedCategory) {
-    const categoryExpenses =
-      expenses.filter(
-        (expense) =>
-          expense.category.toLowerCase() ===
-          matchedCategory
-      );
-
-    const total =
-      categoryExpenses.reduce(
-        (sum, expense) =>
-          sum + expense.amount,
-        0
-      );
-
-    return res.json({
-      reply: `You have spent ₹${total} on ${matchedCategory}.`,
-    });
-  }
-}
-    // Total Expenses Query
-    if (
-      lowerMessage.includes("total expenses") ||
-      lowerMessage.includes("total spending")
-    ) {
-      const expenses = await Expense.find({
-        userId,
-      });
-
-      const total = expenses.reduce(
-        (sum, expense) => sum + expense.amount,
-        0
-      );
-
-      return res.json({
-        reply: `Your total expenses are ₹${total}.`,
+    if (!message || !userId) {
+      return res.status(400).json({
+        message: "Message and userId are required",
       });
     }
 
-    // Recent Expenses Query
-    if (
-      lowerMessage.includes("recent expenses")
-    ) {
-      const recentExpenses =
-        await Expense.find({ userId })
-          .sort({ createdAt: -1 })
-          .limit(5);
+    // --------------------------------------------------
+    // 1. GET USER EXPENSES FROM MONGODB
+    // --------------------------------------------------
 
-      const formatted = recentExpenses
-        .map(
-          (expense) =>
-            `${expense.category} - ₹${expense.amount}`
-        )
-        .join("\n");
-
-      return res.json({
-        reply:
-          "Recent Expenses:\n\n" +
-          formatted,
-      });
-    }
-// Spending Insights
-if (
-  lowerMessage.includes("insights") ||
-  lowerMessage.includes("analysis")
-) {
-  const expenses = await Expense.find({
-    userId,
-  });
-
-  if (expenses.length === 0) {
-    return res.json({
-      reply: "No expenses found.",
-    });
-  }
-
-  const totalExpenses = expenses.reduce(
-    (sum, expense) => sum + expense.amount,
-    0
-  );
-
-  const categoryTotals = {};
-
-  expenses.forEach((expense) => {
-    if (!categoryTotals[expense.category]) {
-      categoryTotals[expense.category] = 0;
-    }
-
-    categoryTotals[expense.category] +=
-      expense.amount;
-  });
-
-  const highestCategory =
-    Object.keys(categoryTotals).reduce(
-      (a, b) =>
-        categoryTotals[a] >
-        categoryTotals[b]
-          ? a
-          : b
-    );
-
-  return res.json({
-    reply:
-      ` Spending Insights\n\n` +
-      `Total Expenses: ₹${totalExpenses}\n\n` +
-      `Highest Category: ${highestCategory} (₹${categoryTotals[highestCategory]})\n\n` +
-      `Suggestion: Try reducing spending in your highest category.`,
-  });
-}
-// Delete Last Expense
-if (
-  lowerMessage.includes("delete") &&
-  lowerMessage.includes("last expense")
-) {
-  const lastExpense =
-    await Expense.findOne({ userId })
+    const expenses = await Expense.find({ userId })
       .sort({ createdAt: -1 });
 
-  if (!lastExpense) {
-    return res.json({
-      reply: "No expenses found.",
-    });
-  }
+    // --------------------------------------------------
+    // 2. CALCULATE BASIC EXPENSE SUMMARY
+    // --------------------------------------------------
 
-  await Expense.findByIdAndDelete(
-    lastExpense._id
-  );
-
-  return res.json({
-    reply:
-      `Deleted ${lastExpense.category} expense of ₹${lastExpense.amount}.`,
-  });
-}
-// Update Last Expense
-if (
-  lowerMessage.includes("change") &&
-  lowerMessage.includes("last expense")
-) {
-  const amountMatch =
-    lowerMessage.match(/\d+/);
-
-  if (!amountMatch) {
-    return res.json({
-      reply:
-        "Please provide a valid amount.",
-    });
-  }
-
-  const newAmount =
-    Number(amountMatch[0]);
-
-  const lastExpense =
-    await Expense.findOne({ userId })
-      .sort({ createdAt: -1 });
-
-  if (!lastExpense) {
-    return res.json({
-      reply: "No expenses found.",
-    });
-  }
-
-  const oldAmount =
-    lastExpense.amount;
-
-  lastExpense.amount =
-    newAmount;
-
-  await lastExpense.save();
-
-  return res.json({
-    reply:
-      `Updated last expense from ₹${oldAmount} to ₹${newAmount}.`,
-  });
-}
-// Budget Remaining Query
-if (
-  lowerMessage.includes("budget") &&
-  lowerMessage.includes("left")
-) {
-  const expenses = await Expense.find({
-    userId,
-  });
-  const totalExpenses =
-    expenses.reduce(
+    const totalExpenses = expenses.reduce(
       (sum, expense) =>
-        sum + expense.amount,
+        sum + Number(expense.amount),
       0
     );
-  const remaining =
-    Number(budget) -
-    totalExpenses;
 
-  return res.json({
-    reply:
-      `Your budget is ₹${budget}.\n` +
-      `Remaining budget is ₹${remaining}.`,
-  });
-}
-// Highest Spending Category Query
-if (
-  lowerMessage.includes("highest spending category") ||
-  lowerMessage.includes("highest category")
-) {
-  const expenses = await Expense.find({
-    userId,
-  });
+    const remainingBudget =
+      Number(budget || 0) - totalExpenses;
 
-  if (expenses.length === 0) {
-    return res.json({
-      reply: "No expenses found.",
+    // --------------------------------------------------
+    // 3. CATEGORY SUMMARY
+    // --------------------------------------------------
+
+    const categoryTotals = {};
+
+    expenses.forEach((expense) => {
+      const category =
+        expense.category || "Other";
+
+      const normalizedCategory =
+        category.trim();
+
+      if (!categoryTotals[normalizedCategory]) {
+        categoryTotals[normalizedCategory] = 0;
+      }
+
+      categoryTotals[normalizedCategory] +=
+        Number(expense.amount);
     });
-  }
 
-  const categoryTotals = {};
+    // --------------------------------------------------
+    // 4. PREPARE EXPENSE DATA FOR AI
+    // --------------------------------------------------
 
-  expenses.forEach((expense) => {
-    if (!categoryTotals[expense.category]) {
-      categoryTotals[expense.category] = 0;
-    }
+    const expenseContext = expenses
+      .map((expense) => {
+        const date = expense.createdAt
+          ? new Date(
+              expense.createdAt
+            ).toLocaleDateString()
+          : "Unknown date";
 
-    categoryTotals[expense.category] +=
-      expense.amount;
-  });
+        return `
+Date: ${date}
+Amount: ₹${expense.amount}
+Category: ${expense.category}
+Merchant: ${expense.merchant || "N/A"}
+Description: ${
+          expense.description || "N/A"
+        }
+Payment Method: ${
+          expense.paymentMethod || "N/A"
+        }
+`;
+      })
+      .join("\n");
 
-  const highestCategory =
-    Object.keys(categoryTotals).reduce(
-      (a, b) =>
-        categoryTotals[a] >
-        categoryTotals[b]
-          ? a
-          : b
-    );
+    const categoryContext = Object.entries(
+      categoryTotals
+    )
+      .map(
+        ([category, amount]) =>
+          `${category}: ₹${amount}`
+      )
+      .join("\n");
 
-  return res.json({
-    reply:
-      `Your highest spending category is ${highestCategory} (₹${categoryTotals[highestCategory]}).`,
-  });
+    // --------------------------------------------------
+    // 5. AI PROMPT
+    // --------------------------------------------------
+
+    const systemPrompt = `
+You are an intelligent AI Expense Assistant.
+
+You help users understand and manage their expenses.
+
+You can answer:
+- Expense-related questions
+- Spending analysis questions
+- Budget questions
+- Comparison questions
+- Saving suggestions
+- Financial planning questions based on the available expense data
+- General questions in a helpful conversational way
+
+IMPORTANT:
+Use the user's expense data when answering questions about their personal spending.
+
+Do NOT invent expenses or financial information.
+
+If the user asks something unrelated to expenses, you can still answer naturally and helpfully.
+
+You also support adding expenses.
+
+If the user's message clearly means that they want to ADD an expense,
+return ONLY this JSON format:
+
+{
+  "action": "ADD_EXPENSE",
+  "amount": 500,
+  "category": "Food",
+  "merchant": "",
+  "description": "",
+  "paymentMethod": "Cash"
 }
-    // Groq AI Call
+
+If the user is NOT asking to add an expense,
+return ONLY this JSON format:
+
+{
+  "action": "CHAT",
+  "reply": "Your natural language answer here"
+}
+
+Examples:
+
+User:
+I spent 500 on food
+
+Response:
+{
+  "action": "ADD_EXPENSE",
+  "amount": 500,
+  "category": "Food",
+  "merchant": "",
+  "description": "",
+  "paymentMethod": "Cash"
+}
+
+User:
+What is my highest expense?
+
+Response:
+{
+  "action": "CHAT",
+  "reply": "Your highest expense is ..."
+}
+
+User:
+How can I reduce my spending?
+
+Response:
+{
+  "action": "CHAT",
+  "reply": "Based on your spending..."
+}
+
+Always return valid JSON.
+`;
+
+    // --------------------------------------------------
+    // 6. CREATE USER CONTEXT
+    // --------------------------------------------------
+
+    const userContext = `
+USER EXPENSE INFORMATION
+
+Total Expenses:
+₹${totalExpenses}
+
+Budget:
+₹${budget || 0}
+
+Remaining Budget:
+₹${remainingBudget}
+
+CATEGORY TOTALS:
+${categoryContext || "No expenses available."}
+
+INDIVIDUAL EXPENSES:
+${
+  expenseContext ||
+  "No expenses have been recorded yet."
+}
+`;
+
+    // --------------------------------------------------
+    // 7. SEND QUESTION + CONTEXT TO GROQ / LLAMA
+    // --------------------------------------------------
+
     const completion =
       await groq.chat.completions.create({
+        model: "openai/gpt-oss-20b",
+
         messages: [
           {
             role: "system",
-            content: `
-You are an expense extraction assistant.
-
-Extract expense information and return ONLY valid JSON.
-
-Example:
-
-Input:
-I spent 500 on food
-
-Output:
-{
-  "amount": 500,
-  "category": "Food"
-}
-            `,
+            content: systemPrompt,
           },
           {
             role: "user",
-            content: message,
+            content: `
+${userContext}
+
+USER QUESTION:
+${message}
+`,
           },
         ],
-        model: "llama-3.3-70b-versatile",
       });
 
-    const reply =
+    // --------------------------------------------------
+    // 8. GET AI RESPONSE
+    // --------------------------------------------------
+
+    let reply =
       completion.choices[0].message.content;
 
+    console.log(
+      "AI Response:",
+      reply
+    );
+
+    // Remove markdown code fences if AI adds them
+    reply = reply
+      .replace(/```json/gi, "")
+      .replace(/```/g, "")
+      .trim();
+
+    // --------------------------------------------------
+    // 9. PARSE AI RESPONSE
+    // --------------------------------------------------
+
+    let aiResponse;
+
     try {
-      const expenseData = JSON.parse(
-        reply
-          .replace(/```json|```/g, "")
-          .trim()
+      aiResponse = JSON.parse(reply);
+    } catch (parseError) {
+      console.log(
+        "AI JSON Parse Error:",
+        parseError
       );
 
-      if (
-        expenseData.amount &&
-        expenseData.category
-      ) {
-        const expense =
-          await Expense.create({
-            userId,
-            amount: expenseData.amount,
-            category:
-              expenseData.category,
-            merchant: "",
-            description:
-              "Added via AI",
-            paymentMethod: "Cash",
-          });
-
-        return res.json({
-          reply: `Added ₹${expense.amount} expense in ${expense.category} category.`,
-        });
-      }
-    } catch (err) {
-      console.log("JSON Parse Error");
+      // Fallback if AI returns normal text
+      return res.json({
+        reply: reply,
+      });
     }
 
-    res.json({ reply });
+    // --------------------------------------------------
+    // 10. ADD EXPENSE THROUGH AI
+    // --------------------------------------------------
+
+    if (
+      aiResponse.action ===
+      "ADD_EXPENSE"
+    ) {
+      if (
+        !aiResponse.amount ||
+        !aiResponse.category
+      ) {
+        return res.json({
+          reply:
+            "I couldn't understand the expense details. Please mention the amount and category.",
+        });
+      }
+
+      const expense =
+        await Expense.create({
+          userId,
+
+          amount: Number(
+            aiResponse.amount
+          ),
+
+          category:
+            aiResponse.category,
+
+          merchant:
+            aiResponse.merchant || "",
+
+          description:
+            aiResponse.description ||
+            "Added via AI",
+
+          paymentMethod:
+            aiResponse.paymentMethod ||
+            "Cash",
+        });
+
+      return res.json({
+        reply:
+          `Added ₹${expense.amount} expense in ` +
+          `${expense.category} category.`,
+      });
+    }
+
+    // --------------------------------------------------
+    // 11. NORMAL AI CHAT RESPONSE
+    // --------------------------------------------------
+
+    if (
+      aiResponse.action === "CHAT"
+    ) {
+      return res.json({
+        reply:
+          aiResponse.reply ||
+          "I'm sorry, I couldn't generate a response.",
+      });
+    }
+
+    // --------------------------------------------------
+    // 12. FALLBACK
+    // --------------------------------------------------
+
+    return res.json({
+      reply:
+        aiResponse.reply ||
+        "I'm sorry, I couldn't understand that.",
+    });
 
   } catch (error) {
-    console.log(error);
+    console.log(
+      "AI Controller Error:",
+      error
+    );
 
-    res.status(500).json({
+    return res.status(500).json({
       message: "AI Error",
     });
   }

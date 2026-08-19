@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import API from "../services/api";
 import Layout from "../components/Layout";
+import "../styles/Dashboard.css";
 
 function Dashboard() {
   const [summary, setSummary] = useState({
@@ -8,231 +9,212 @@ function Dashboard() {
     totalTransactions: 0,
     recentExpenses: [],
   });
+
   const [budget, setBudget] = useState(
     localStorage.getItem("budget") || ""
   );
 
- const fetchDashboardData = async () => {
-  try {
-    const res = await API.get("/expenses/dashboard");
+  const fetchDashboardData = async () => {
+    try {
+      const res = await API.get(
+        "/expenses/dashboard"
+      );
 
-    setSummary(res.data);
-  } catch (error) {
-    console.log(error);
-  }
-};
+      setSummary(res.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
     fetchDashboardData();
   }, []);
 
   const saveBudget = () => {
-    localStorage.setItem(
-      "budget",
-      budget
-    );
-
+    localStorage.setItem("budget", budget);
     alert("Budget Saved");
   };
 
   const remainingBudget =
     Number(budget || 0) -
     summary.totalExpenses;
+
   return (
     <Layout>
-     <h1
-  style={{
-    color: "#1e293b",
-    marginBottom: "30px",
-  }}
->
-  Dashboard
-</h1>
+<div className="dashboard-header">
+  <div className="dashboard-title-section">
+    <span className="dashboard-label">
+      💼 Expense Overview
+    </span>
 
-      <div
-        style={{
-          display: "flex",
-          gap: "20px",
-          marginTop: "20px",
-          flexWrap: "wrap",
-        }}
-      >
-        <div
-        style={{
-  background: "#ffffff",
-  padding: "25px",
-  borderRadius: "15px",
-  width: "260px",
-  minHeight: "180px",
-  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-}}
-        >
-          <h3
-  style={{
-    marginBottom: "20px",
-  }}
->
-  Total Expenses
-</h3>
+    <h1>Dashboard</h1>
 
-<h2>
-  ₹{summary.totalExpenses}
-</h2>
+    <p>
+      Track your spending, budget and recent
+      transactions in one place.
+    </p>
+  </div>
+
+  <div className="dashboard-status">
+    <span className="status-dot"></span>
+    <span>Financial Overview</span>
+  </div>
+</div>
+      {/* Summary Cards */}
+      <div className="dashboard-cards">
+
+        {/* Total Expenses */}
+        <div className="dashboard-card">
+          <div className="card-icon expense-icon">
+            💰
+          </div>
+
+          <div className="card-content">
+            <p>Total Expenses</p>
+            <h2>
+              ₹{summary.totalExpenses}
+            </h2>
+          </div>
         </div>
 
-        <div
-          style={{
-  background: "#ffffff",
-  padding: "25px",
-  borderRadius: "15px",
-  width: "260px",
-  minHeight: "180px",
-  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-}}
-        >
-          <h3 style={{
-    marginBottom: "20px",
-  }}>Total Transactions</h3>
+        {/* Transactions */}
+        <div className="dashboard-card">
+          <div className="card-icon transaction-icon">
+            🧾
+          </div>
 
-          <h2>
-            {summary.totalTransactions}
-          </h2>
+          <div className="card-content">
+            <p>Total Transactions</p>
+            <h2>
+              {summary.totalTransactions}
+            </h2>
+          </div>
         </div>
 
-        <div
-        style={{
-  background: "#ffffff",
-  padding: "25px",
-  borderRadius: "15px",
-  width: "260px",
-  minHeight: "180px",
-  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-}}
-        >
-          <h3 style={{
-    marginBottom: "20px",
-  }}>Budget</h3>
+        {/* Budget */}
+        <div className="dashboard-card budget-card">
 
-        <input
-  type="number"
-  value={budget}
-  onChange={(e) =>
-    setBudget(e.target.value)
-  }
-  placeholder="Enter Budget"
-  style={{
-    width: "100%",
-    padding: "10px",
-    borderRadius: "8px",
-    border: "1px solid #ccc",
-  }}
-/>
-          <br />
-  <div
-  style={{
-    display: "flex",
-    justifyContent: "center",
-    marginTop: "15px",
-    marginBottom: "15px",
-  }}
->
-  <button
-    onClick={saveBudget}
-    style={{
-      background: "#2563eb",
-      color: "white",
-      border: "none",
-      padding: "10px 15px",
-      borderRadius: "8px",
-      cursor: "pointer",
-    }}
-  >
-    Save Budget
-  </button>
+  <div className="card-icon budget-icon">
+    💵
+  </div>
+
+  <div className="card-content">
+    <p>Monthly Budget</p>
+
+    <div className="budget-input-wrapper">
+      <span>₹</span>
+
+      <input
+        type="number"
+        value={budget}
+        onChange={(e) =>
+          setBudget(e.target.value)
+        }
+        placeholder="Enter budget"
+        className="budget-input"
+      />
+    </div>
+
+    <button
+      onClick={saveBudget}
+      className="save-budget-btn"
+    >
+      Save Budget
+    </button>
+  </div>
+
 </div>
 
-          <h4 style={{
-            marginBottom: "15px"
-    //marginTop: "15px",
-  }}>
-            Remaining: ₹
-            {remainingBudget}
-          </h4>
+        {/* Remaining Budget */}
+        <div className="dashboard-card">
+          <div className="card-icon remaining-icon">
+            📊
+          </div>
+
+          <div className="card-content">
+            <p>Remaining Budget</p>
+
+            <h2
+              className={
+                remainingBudget < 0
+                  ? "budget-danger"
+                  : "budget-safe"
+              }
+            >
+              ₹{remainingBudget}
+            </h2>
+
+            <span className="card-subtitle">
+              Available to spend
+            </span>
+          </div>
         </div>
+
       </div>
 
-      <h2
-        style={{
-          marginTop: "40px",
-        }}
-      >
-        Recent Expenses
-      </h2>
+      {/* Recent Expenses */}
+      <div className="recent-expenses-section">
 
-     <table
-  style={{
-    width: "100%",
-    background: "#fff",
-    borderCollapse: "collapse",
-    borderRadius: "10px",
-  }}
->
-        <thead
-  style={{
-    background: "#dbeafe",
-  }}
->
-          <tr>
-           <th
-  style={{
-    padding: "15px",
-    textAlign: "center",
-  }}
->
-  Amount
-</th>
+        <div className="section-header">
+          <div>
+            <h2>Recent Expenses</h2>
+            <p>
+              Your latest transactions
+            </p>
+          </div>
+        </div>
 
-<th
-  style={{
-    padding: "15px",
-    textAlign: "center",
-  }}
->
-  Category
-</th>
-          </tr>
-        </thead>
+        <div className="expense-table-container">
 
-        <tbody>
-          {summary.recentExpenses.map(
-            (expense) => (
-              <tr
-  key={expense._id}
-  style={{
-    borderBottom: "1px solid #e5e7eb",
-  }}
->
-               <td
-  style={{
-    padding: "15px",
-    textAlign: "center",
-  }}
->
-  ₹{expense.amount}
-</td>
+          <table className="expense-table">
 
-<td
-  style={{
-    padding: "15px",
-    textAlign: "center",
-  }}
->
-  {expense.category}
-</td>
+            <thead>
+              <tr>
+                <th>Amount</th>
+                <th>Category</th>
               </tr>
-            )
-          )}
-        </tbody>
-      </table>
+            </thead>
+
+            <tbody>
+
+              {summary.recentExpenses.length >
+              0 ? (
+                summary.recentExpenses.map(
+                  (expense) => (
+                    <tr key={expense._id}>
+
+                      <td className="amount-cell">
+                        ₹{expense.amount}
+                      </td>
+
+                      <td>
+                        <span className="category-badge">
+                          {expense.category}
+                        </span>
+                      </td>
+
+                    </tr>
+                  )
+                )
+              ) : (
+                <tr>
+                  <td
+                    colSpan="2"
+                    className="no-expenses"
+                  >
+                    No expenses found.
+                  </td>
+                </tr>
+              )}
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
     </Layout>
   );
 }
